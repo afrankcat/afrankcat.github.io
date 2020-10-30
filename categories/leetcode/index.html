@@ -415,7 +415,7 @@ NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
       appId      : 'NJ438eXM7D761vGcX4olvVvQ-gzGzoHsz',
       appKey     : 'v1MPaOfa4Pl7KUv0cwd3h3AT',
       placeholder: "说点什么吧~",
-      avatar     : 'identicon',
+      avatar     : 'monsterid',
       meta       : guest,
       pageSize   : '10' || 10,
       visitor    : false,
@@ -424,6 +424,10 @@ NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
       recordIP   : false,
       serverURLs : ''
     });
+    var infoEle = document.querySelector('.vpower.txt-right');
+    if(infoEle){
+      infoEle.parentNode.removeChild(infoEle);
+    }
   }, window.Valine);
 });
 </script>
