@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"afrankcat.github.io","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="leetcode题库28题要求实现c语言库函数strStr()，这就是纯粹的字符串匹配问题。正好复习一下数据结构里面学到的KMP算法。对于KMP的优化，书上是向前迭代一次next[]，我的实现是迭代到不能再迭代。其实大多时候，暴力匹配足够香。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="字符串匹配——暴力匹配与KMP">
+<meta property="og:url" content="https://afrankcat.github.io/%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%9A%B4%E5%8A%9B%E5%8C%B9%E9%85%8D%E5%92%8CKMP%E7%AE%97%E6%B3%95/index.html">
+<meta property="og:site_name" content="不羁音符の博客">
+<meta property="og:description" content="leetcode题库28题要求实现c语言库函数strStr()，这就是纯粹的字符串匹配问题。正好复习一下数据结构里面学到的KMP算法。对于KMP的优化，书上是向前迭代一次next[]，我的实现是迭代到不能再迭代。其实大多时候，暴力匹配足够香。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s1.ax1x.com/2020/11/01/B0shKe.png">
+<meta property="og:image" content="https://s1.ax1x.com/2020/11/01/B0sOxS.png">
+<meta property="article:published_time" content="2020-11-01T14:01:09.276Z">
+<meta property="article:modified_time" content="2020-11-01T14:05:19.327Z">
+<meta property="article:author" content="不羁音符">
+<meta property="article:tag" content="字符串">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s1.ax1x.com/2020/11/01/B0shKe.png">
+
+<link rel="canonical" href="https://afrankcat.github.io/%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%9A%B4%E5%8A%9B%E5%8C%B9%E9%85%8D%E5%92%8CKMP%E7%AE%97%E6%B3%95/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>字符串匹配——暴力匹配与KMP | 不羁音符の博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">不羁音符の博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">keep hungry, keep foolish</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">3</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">3</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">3</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://afrankcat.github.io/%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%9A%B4%E5%8A%9B%E5%8C%B9%E9%85%8D%E5%92%8CKMP%E7%AE%97%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/cat.jpg">
+      <meta itemprop="name" content="不羁音符">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="不羁音符の博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          字符串匹配——暴力匹配与KMP
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-11-01 22:01:09 / 修改时间：22:05:19" itemprop="dateCreated datePublished" datetime="2020-11-01T22:01:09+08:00">2020-11-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">算法</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%9A%B4%E5%8A%9B%E5%8C%B9%E9%85%8D%E5%92%8CKMP%E7%AE%97%E6%B3%95/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%9A%B4%E5%8A%9B%E5%8C%B9%E9%85%8D%E5%92%8CKMP%E7%AE%97%E6%B3%95/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>leetcode题库28题要求实现c语言库函数<code>strStr()</code>，这就是纯粹的字符串匹配问题。正好复习一下数据结构里面学到的KMP算法。对于KMP的优化，书上是向前迭代一次<code>next[]</code>，我的实现是迭代到不能再迭代。其实大多时候，暴力匹配足够香。</p>
+<a id="more"></a>
+
+<h3 id="暴力匹配"><a href="#暴力匹配" class="headerlink" title="暴力匹配"></a>暴力匹配</h3><p>从下标为0开始，逐个比较模式串和和目标串的每个字符。若出现不匹配情况，则置目标串的下标为1，模式串的下标为0，继续匹配……直到匹配成功或遍历到目标串的尾端。思路简单，并且由于<code>subString()</code>方法的存在，实现起来就更简单了。直接比较截取的字符串和模式串是否相等。注意<code>equals()</code>的底层实现，对于<code>String</code>的比较，仍然是一位一位对比，效率和逐个比较<code>char</code>是一样的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//目标串为haystack，模式串为needle</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">strStr2</span><span class="params">(String haystack, String needle)</span></span>&#123;</span><br><span class="line">    <span class="comment">//如果needle为空，匹配的位置自然是0</span></span><br><span class="line">        <span class="keyword">if</span>(needle.length()==<span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span> nLength = needle.length();</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;haystack.length()-nLength;i++)&#123;</span><br><span class="line">            <span class="keyword">if</span>(haystack.substring(i, i+nLength).equals(needle))</span><br><span class="line">                <span class="keyword">return</span> i;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="KMP算法"><a href="#KMP算法" class="headerlink" title="KMP算法"></a>KMP算法</h3><p>花了不少时间，KMP算法总算是明白一二了。按我的理解阐述一下KMP算法。</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/B0shKe"><img src="https://s1.ax1x.com/2020/11/01/B0shKe.png" alt="B0shKe.png"></a></p>
+<p>如上图所示，上面是目标串，下面是模式串。i和j初值均为0开始匹配。当i和j分别到达图示位置时，匹配失败。按照暴力匹配思想，i应该回退至1，j回退至0。实际上，在下一次i到达图示位置前，匹配过程是串<code>aba</code>自身的后端和前端的匹配。先是模式串右移一位，ba和ab匹配，失败。再右移一位，模式串到了图示最下面的状态，a和a匹配，成功。这时候i才重回图示位置。如果我们能够提前把模式串的前n位的首尾匹配字符数量计算出来，那么i就不用回退，j也不是每次都从0开始匹配。</p>
+<p>这就诞生了**<code>next</code>数组**的定义。<code>next</code>数组长度和模式串长度相等。若<code>next[i]=k</code>，则表示模式串前<code>i+1</code>位字符串的前4k位和后k位匹配，并且这个k是最大的，但不能是<code>i+1</code>，也就是不能把自身算进去。有了<code>next</code>数组，对于上面所述情形，i不需要回退，j回退到<code>next[j-1]</code>，继续匹配。</p>
+<p>如何<strong>计算<code>next</code>数组</strong>？假设字符串对应的数组是<code>chars[]</code>，显然<code>next[0]</code>等于0。我们能够感觉到<code>next</code>数组的相邻项之间存在着迭代关系。对于第i项：</p>
+<p>假设<code>next[i-1]=k</code>，表示字符串第0位至第k-1位这k位和第i位的前k位相同。那么，如果<code>char[i]==char[k]</code>，有<code>next[i]=k+1</code>。如果<code>char[i]!=char[k]</code>，说明<code>next[i]</code>必定小于k，那么只能从第k位之前寻找首尾相等的最大数值，而这个数量我们已经有了定义：<code>next[k-1]</code>。那么，令<code>k=next[k-1]</code>，再去判断<code>char[i]</code>和<code>char[k]</code>是否相等，也就是重复上面过程，直到<code>char[i]==char[k]</code>。如果一直不相等，即k迭代到了0，并且<code>char[0]!=char[i]</code>，那么说明前i位的首尾没有完全匹配的可能，则<code>next[i]=0</code>。代码实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">int</span>[] getNext(String pattern)&#123;</span><br><span class="line">        <span class="keyword">int</span> length = pattern.length();</span><br><span class="line">        <span class="keyword">if</span>(length==<span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">int</span>[] next = <span class="keyword">new</span> <span class="keyword">int</span>[length];</span><br><span class="line">        next[<span class="number">0</span>] = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">1</span>;i&lt;length;i++)&#123;</span><br><span class="line">            <span class="keyword">int</span> k = next[i-<span class="number">1</span>];</span><br><span class="line">            <span class="keyword">while</span>(k&gt;<span class="number">0</span> &amp;&amp; pattern.charAt(i)!=pattern.charAt(k))</span><br><span class="line">                k = next[k-<span class="number">1</span>];</span><br><span class="line">            <span class="keyword">if</span>(pattern.charAt(i) == pattern.charAt(k))</span><br><span class="line">                k++;</span><br><span class="line">            next[i] = k;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> next;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>有了<code>next</code>数组，那么模式串和目标串的匹配就简单了一些。目标串的指针j不再需要回溯，遇到某个字符不匹配，模式串的指针置<code>next[i-1]</code>就可以了，如果i回到了第0位仍然不匹配，就需要移进j指针了。匹配过程的代码实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">strStr</span><span class="params">(String haystack, String needle)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(needle.length()==<span class="number">0</span>)</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">int</span>[] next = getNext(needle);</span><br><span class="line">        <span class="keyword">int</span> i=<span class="number">0</span>, j=<span class="number">0</span>;</span><br><span class="line">        <span class="keyword">while</span> (j&lt;haystack.length())&#123;</span><br><span class="line">            <span class="keyword">if</span>(haystack.charAt(j) != needle.charAt(i))&#123;</span><br><span class="line">                <span class="keyword">if</span>(i == <span class="number">0</span>)</span><br><span class="line">                    j++;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                    i = next[i-<span class="number">1</span>];</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> &#123;</span><br><span class="line">                i++;</span><br><span class="line">                j++;</span><br><span class="line">                <span class="keyword">if</span>(i==needle.length())</span><br><span class="line">                    <span class="keyword">return</span> j-needle.length();</span><br><span class="line">                <span class="keyword">if</span>(j==haystack.length())</span><br><span class="line">                    <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="KMP算法优化"><a href="#KMP算法优化" class="headerlink" title="KMP算法优化"></a>KMP算法优化</h3><p>我们注意到，在匹配的迭代过程中，还是会出现冗余的匹配。如下图：</p>
+<p><a target="_blank" rel="noopener" href="https://imgchr.com/i/B0sOxS"><img src="https://s1.ax1x.com/2020/11/01/B0sOxS.png" alt="B0sOxS.png"></a></p>
+<p>前三个字符都是a，所以当第一次b和a出现不匹配时，就没有必要比较其他前面的a了。我们得出的<code>next[i]=k</code>，有第k位字符<code>pattern.charAt(k-1)</code>与第i位字符<code>pattern.charAt(i)</code>相等，所以当模式串第i位和目标串不匹配时，回退到第<code>next[i-1]</code>位，若该位字符和第i位相同，那么就没必要进行此次比较，我们可以直接回退到<code>next[next[i-1]-1]</code>位。此过程可以迭代。</p>
+<p>由此我们引出<code>nextval[]</code>数组的定义，<code>nextval[i]</code>表示若<code>pattern.charAt(i)</code>不匹配的回退位置，该位置由<code>next[]</code>数组根据上面的迭代得到。由<code>next[]</code>求<code>nextval</code>的代码实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">int</span>[] getNextval(String pattern, <span class="keyword">int</span> next[])&#123;</span><br><span class="line">        <span class="keyword">int</span> length = pattern.length();</span><br><span class="line">        <span class="keyword">int</span>[] nextval = <span class="keyword">new</span> <span class="keyword">int</span>[length];</span><br><span class="line">        nextval[<span class="number">0</span>] = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">1</span>;i&lt;length;i++)&#123;</span><br><span class="line">            <span class="keyword">int</span> j = i;</span><br><span class="line">            <span class="keyword">while</span> (j&gt;<span class="number">0</span> &amp;&amp; pattern.charAt(next[j-<span class="number">1</span>]) == pattern.charAt(j)) &#123;</span><br><span class="line">                j = next[j-<span class="number">1</span>];</span><br><span class="line">                <span class="keyword">if</span>(j == <span class="number">0</span>)</span><br><span class="line">                    next[i-<span class="number">1</span>] = <span class="number">0</span>;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                    next[i-<span class="number">1</span>] = next[j-<span class="number">1</span>];</span><br><span class="line">            &#125;</span><br><span class="line">            nextval[i] = next[i-<span class="number">1</span>];</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> nextval;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>对应于<code>nextval[]</code>下的KMP匹配，只需要把原代码中的<code>next</code>数组替换为<code>nextval</code>即可。</p>
+<p>优化的KMP对于模式串存在大量连续重复的字母有着速度的提升，但这种提升在目标串长度足够长时才能够很好的体现。而一般的KMP算法，基本大部分时候效率都低于暴力算法。暴力更便捷的原因在于没有<code>next[]</code>的计算。</p>
+<p>后记：</p>
+<p>写完代码发现，网上代码对于<code>next[i]</code>表示的是第0位至第i-1位的求解，而我的代码是第0位至第i位。不过这无伤大雅，重要的是思路。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/" rel="tag"># 字符串</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/leetcode%E9%A2%9817-20%E6%80%BB%E7%BB%93/" rel="prev" title="leetcode题库17-20总结">
+      <i class="fa fa-chevron-left"></i> leetcode题库17-20总结
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9A%B4%E5%8A%9B%E5%8C%B9%E9%85%8D"><span class="nav-number">1.</span> <span class="nav-text">暴力匹配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#KMP%E7%AE%97%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">KMP算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#KMP%E7%AE%97%E6%B3%95%E4%BC%98%E5%8C%96"><span class="nav-number">3.</span> <span class="nav-text">KMP算法优化</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="不羁音符"
+      src="/images/cat.jpg">
+  <p class="site-author-name" itemprop="name">不羁音符</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">不羁音符</span>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='150' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'NJ438eXM7D761vGcX4olvVvQ-gzGzoHsz',
+      appKey     : 'v1MPaOfa4Pl7KUv0cwd3h3AT',
+      placeholder: "说点什么吧~",
+      avatar     : 'monsterid',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+    var infoEle = document.querySelector('.vpower.txt-right');
+    if(infoEle){
+      infoEle.parentNode.removeChild(infoEle);
+    }
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
